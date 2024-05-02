@@ -1,5 +1,26 @@
 <?php
+session_start();
+
 include '../php/connect.php';
+$email = $_SESSION['email'];
+
+if (empty($email)) {
+    # code...
+    header("location: ../");
+}
+
+$sql2 = "SELECT * FROM `users` WHERE email='$email'";
+$res2 = mysqli_query($con, $sql2);
+
+$data = mysqli_fetch_assoc($res2);
+
+$uname = $data['user_name'];
+$uid = $data['user_id'];
+$email = $data['email'];
+$id = $data['id'];
+$profile = $data['profile'];
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -221,6 +242,57 @@ include '../php/connect.php';
         transform: scale(2);
         display: flex;
     }
+
+
+    /* =========reset pop up============ */
+    .popup {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .popup-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        text-align: center;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    button {
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
     </style>
 </head>
 
@@ -234,18 +306,18 @@ include '../php/connect.php';
 
         <div class="profile">
             <div class="img-container">
-                <img src="img/user.png">
+                <img src="../assets/img/profile/<?php echo $profile;?>">
 
             </div>
             <div class="profile-details">
-                <h4 class="userName">Mugisha valentin</h4>
-                <h5 class="email">Mugishavalentin18@gmail.com</h5>
+                <h4 class="userName"><?php echo $uname;?></h4>
+                <h5 class="email"><?php echo $email;?></h5>
             </div>
 
             <a href="./index.php?link=manage" id="link0" hidden></a>
             <button class="manage-account-btn" onclick="document.getElementById('link0').click()">Manage
                 Account</button>
-            <button class="sign-out-btn">Sign Out</button>
+            <a href="../php/signout.php"><button class="sign-out-btn">Sign Out</button></a>
         </div>
         </div>
         <div class="General">
@@ -262,13 +334,87 @@ include '../php/connect.php';
                 </label>
 
             </div>
-            <form method="" method="post">
-                <button class="Reset" style="margin-top: 25px;
-         margin-left:50px; 
-         ">Reset task</button>
+
+            <button id="deleteButton" class="Reset" type="submit">Delete All Tasks</button>
+
+
+
+            <form action="truncate.php" method="post">
             </form>
 
+            <!-- Popup action="../php/truncate.php" -->
+            <div id="popup" class="popup">
+                    <form  method="post">
 
+                <div class="popup-content">
+                    <span class="close" id="closePopup">&times;</span>
+                    <p>Are you sure you want to delete all tasks?</p>
+                        <button id="confirmDelete" name="confirmDelete">Yes, Delete</button>
+                <!-- <button type="submit" name="confirmDelete">check</button> -->
+                        <button type="button" id="cancelDelete" class="btn btn-danger">Cancel</button>
+                    </form>
+                </div>
+            </div>
+
+            <?php 
+
+            if (isset($_POST['confirmDelete'])) {
+                # code...
+                $query = "DELETE * FROM `tasks` WHERE user_id='$uid'";
+                $resp = mysqli_query($con,$query);
+                if ($resp) {
+                    # code...
+                    echo "
+                    <script>
+                    alert('All Tasks deleted successfully!'); // You can replace this with actual deletion logic
+                
+                    </script>
+                    ";
+                    
+                }else{
+                    echo "
+                    <script>
+                    alert('Sorry!! Tasks not deleted successfully!'); // You can replace this with actual deletion logic
+                    </script>
+                    ";
+                }
+            
+                header('location: ../setting/index.php?link=home');
+            }
+            ?>
+
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var deleteButton = document.getElementById('deleteButton');
+                var popup = document.getElementById('popup');
+                var closePopup = document.getElementById('closePopup');
+                var cancelDelete = document.getElementById('cancelDelete');
+                var deleteForm = document.getElementById('deleteForm');
+
+                deleteButton.addEventListener('click', function() {
+                    popup.style.display = 'block';
+                });
+
+                closePopup.addEventListener('click', function() {
+                    popup.style.display = 'none';
+                });
+
+                cancelDelete.addEventListener('click', function() {
+                    popup.style.display = 'none';
+                });
+
+                deleteForm.addEventListener('submit', function(event) {
+                    // Prevent the default form submission behavior
+                    event.preventDefault();
+
+                    // Logic to handle form submission
+                    // For demonstration, let's alert a message
+                    alert("Tasks deleted successfully!"); // You can replace this with actual deletion logic
+                    popup.style.display = 'none';
+                });
+            });
+            </script>
 
         </div>
         <p id="switchState" style="margin-top:-119px;
@@ -317,97 +463,95 @@ margin-left: -0%;
 include '../php/director.php';
 ?>
 
-<script>
+        <script>
+        var visisble = false;
 
-var visisble = false;
+        const wrapper = document.querySelector(".wrapper");
 
-const wrapper = document.querySelector(".wrapper");
+        const fileName = document.querySelector(".file-name");
 
-const fileName = document.querySelector(".file-name");
+        const defaultBtn = document.querySelector("#default-btn");
 
-const defaultBtn = document.querySelector("#default-btn");
+        const customBtn = document.querySelector("#custom-btn");
 
-const customBtn = document.querySelector("#custom-btn");
+        const cancelBtn = document.querySelector("#cancel-btn i");
 
-const cancelBtn = document.querySelector("#cancel-btn i");
+        const img = document.querySelector("img");
 
-const img = document.querySelector("img");
+        let regExp = /[0-9a-zA-Z\^\&\'\@\{\}\[\]\,\$\=\!\-\#\(\)\.\%\+\~\_ ]+$/;
 
-let regExp = /[0-9a-zA-Z\^\&\'\@\{\}\[\]\,\$\=\!\-\#\(\)\.\%\+\~\_ ]+$/;
+        function defaultBtnActive() {
 
-function defaultBtnActive() {
-
-    defaultBtn.click();
-
-}
-
-defaultBtn.addEventListener("change", function () {
-
-    const file = this.files[0];
-
-    if (file) {
-
-        const reader = new FileReader();
-
-        reader.onload = function () {
-
-            const result = reader.result;
-
-            img.src = result;
-
-            wrapper.classList.add("active");
+            defaultBtn.click();
 
         }
 
-        cancelBtn.addEventListener("click", function () {
+        defaultBtn.addEventListener("change", function() {
 
-            img.src = "";
+            const file = this.files[0];
 
-            wrapper.classList.remove("active");
+            if (file) {
 
-        })
+                const reader = new FileReader();
 
-        reader.readAsDataURL(file);
+                reader.onload = function() {
 
-    }
+                    const result = reader.result;
 
-    if (this.value) {
+                    img.src = result;
 
-        let valueStore = this.value.match(regExp);
+                    wrapper.classList.add("active");
 
-        fileName.textContent = valueStore;
+                }
 
-    }
+                cancelBtn.addEventListener("click", function() {
 
-});
+                    img.src = "";
 
-function show() {
+                    wrapper.classList.remove("active");
 
-    var ind = document.getElementById("eye");
+                })
 
-    var pass = document.getElementById("pswd");
+                reader.readAsDataURL(file);
 
-    if (visisble == false) {
+            }
 
-        ind.className = "bi bi-eye-slash";
+            if (this.value) {
 
-        pass.type = "text";
+                let valueStore = this.value.match(regExp);
 
-        visisble = true;
+                fileName.textContent = valueStore;
 
-    } else {
+            }
 
-        ind.className = "bi bi-eye";
+        });
 
-        pass.type = "password";
+        function show() {
 
-        visisble = false;
+            var ind = document.getElementById("eye");
 
-    }
+            var pass = document.getElementById("pswd");
 
-}
+            if (visisble == false) {
 
-</script>
+                ind.className = "bi bi-eye-slash";
+
+                pass.type = "text";
+
+                visisble = true;
+
+            } else {
+
+                ind.className = "bi bi-eye";
+
+                pass.type = "password";
+
+                visisble = false;
+
+            }
+
+        }
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>

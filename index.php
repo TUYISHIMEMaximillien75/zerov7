@@ -34,7 +34,7 @@ if ($_SESSION['id']){
                     <h4 class="userName"><?php echo $uname; ?></h4>
                     <h5 class="email"><?php echo $email; ?></h5>
                 </div>
-                <a href="setting/index.php" style="color:white;"<i class="bi bi-gear" ></i></a>
+                <a href="setting/index.php?link=home" style="color:white;"<i class="bi bi-gear" ></i></a>
             </div>
 
             <div class="search-container">

@@ -103,9 +103,9 @@
             <div class="d-flex flex-column align-items-center text-center p-3 py-5">
                 <div class="wrapper">
 
-                    <p style="text-align: center;" class="image">
+                    <p style="text-align: center;" class="image profile">
 
-                        <img src="profiles/<?php echo $_SESSION['profileImg'] ?>" class="rounded-circle" alt=""
+                        <img src="../assets/img/profile/<?php echo $profile;?>" class="rounded-circle" alt=""
                             style="width: 200px;height: 200px;">
 
                     </p>
@@ -166,28 +166,33 @@
                 <div class="row mt-2">
 
                     <div class="col-md-6"><label class="labels">User name</label><input type="text"
-                            class="form-control" placeholder="username" name="uname" required></div>
+                            class="form-control" placeholder="username" name="uname" value="<?php echo $uname;?>" required></div>
 
                     <div class="col-md-6"><label class="labels">Email</label><input type="text"
-                            class="form-control" placeholder="email" name="email" required></div>
+                            class="form-control" placeholder="email" name="email" value="<?php echo $email;?>" required></div>
 
                 </div>
 
 
 
-                <div class="row mt-3">
+                <div class="row mt-3" style="display: flex;">
 
                     <div class="col-md-12">
-                        <label class="labels">password</label>
+                        <label class="labels">Current password</label>
                         <input type="password" class="form-control"
-                            placeholder="password" name="password" required>
+                            placeholder="Old password" name="cpassword">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="labels">new password</label>
+                        <input type="password" class="form-control"
+                            placeholder="new password" name="password">
                     </div>
                     <label class="labels">Reenter Password</label>
 
                     <div class="col-md-12 input-group">
 
                         <input type="password" class="form-control" placeholder="Re-enter password" name="repassword"
-                            style="width: 90%;" id="pswd" required>
+                            style="width: 90%;" id="pswd">
 
                         <a href="javascript:void(0)" class="form-control btn btn-warning" onclick="show()"><i
                                 class="bi bi-eye" id="eye"></i></a>
@@ -229,12 +234,224 @@ if (isset($_POST['save'])) {
     $uname = $_POST['uname'];
 
     $email = $_POST['email'];
-    $pass = $_POST['password'];
+    $cpass = $_POST['cpassword'];
 
+    $pass = $_POST['password'];
     $rpass = $_POST['repassword'];
+
+    $file_loc = $_FILES['profile']['tmp_name'];
+    $folder = "../assets/img/profile";
+
+    $new_name = uniqid('Binary-titans', true).$image;
+    // =======check pswd====
+    $encript = md5($cpass);
+    $sql3 = "SELECT * FROM `users` WHERE email='$email' AND pswd = '$encript'";
+    $res3 = mysqli_query($con, $sql3);
+    $rec3 = mysqli_num_rows($res3);
+
+    if (empty($image) && empty($pass)) {
+        # code...
+        $sql = "UPDATE `users` SET user_name='$uname',email='$email'WHERE id='$id'";
+        $res = mysqli_query($con, $sql);
+        
     
-    $sql = "UPDATE `users` SET user_name='$uname',email='$email' ,pswd='$pass', profile='updated' WHERE id='3'";
-    $res = mysqli_query($con, $sql);
+    }
+    elseif ($pass!=""){
+   
+        
+        if ($rec3 >=1) {
+            # code...
+            if ($pass === $rpass) {
+                # code...
+                $encript2=md5($pass);
+                $sql = "UPDATE `users` SET pswd = '$encript2' WHERE id='$id'";
+                $res = mysqli_query($con, $sql);
+    
+                if ($res) {
+                    # code...
+                    echo "
+                    <script>
+                    alert('Updated sucessfull now');
+                    window.location.href='./index.php?link=home';
+                    </script>
+                    ";
+                }else{
+                    echo "
+                    <script>
+                    alert('not added');
+                    // window.location.href='./index.php?link=home';
+                    </script>
+                    ";
+                }
+            }else {
+                # code...
+                echo "
+                <script>
+                // alert('Two passwords does not match');
+                window.location.href='./index.php?link=home';
+                </script>
+                ";
+            }
+
+        }else{
+            echo "
+            <script>
+            alert('Old password not correct');
+            window.location.href='./index.php?link=manage';
+            </script>
+            ";
+        }
+
+
+    }elseif (empty($image) && !empty($pass)) {
+        # code...
+        # 
+   
+        
+        if ($rec3 >=1) {
+            # code...
+            if ($pass === $rpass) {
+                # code...
+                $sql = "UPDATE `users` SET user_name='$uname',email='$email', pswd = '$encript' WHERE id='$id'";
+                $res = mysqli_query($con, $sql);
+    
+                if ($res) {
+                    # code...
+                    echo "
+                    <script>
+                    // alert('Updated sucessfull');
+                    window.location.href='./index.php?link=home';
+                    </script>
+                    ";
+                }
+            }else {
+                # code...
+                echo "
+                <script>
+                // alert('Two passwords does not match');
+                window.location.href='./index.php?link=home';
+                </script>
+                ";
+            }
+
+        }else{
+            echo "
+            <script>
+            alert('Old password not correct');
+            window.location.href='./index.php?link=manage';
+            </script>
+            ";
+        }
+
+    }elseif (!empty($image) && !empty($pass)) {
+        # code...
+        $sql = "UPDATE `users` SET user_name='$uname',email='$email', pswd = '$encript', profile='$new_name' WHERE id='$id'";
+        $res = mysqli_query($con, $sql);
+
+        if ($res) {
+            # code...
+            $move = move_uploaded_file($file_loc, $folder.'/'.$new_name);
+            echo $file_loc;
+            if ($move) {
+                # code...
+                echo"
+                <script>
+                alert('Updated successfull');
+                window.location.href='./index.php?link=home';
+
+                </script>
+                ";
+            }else{
+                echo"
+                <script>
+                alert('not moved');
+                </script>
+                ";     
+            }
+        }
+
+    }elseif (!empty($image) && empty($pass)) {
+        # code...
+        $sql = "UPDATE `users` SET profile='$new_name' WHERE id='$id'";
+        $res = mysqli_query($con, $sql);
+
+        if ($res) {
+            # code...   
+            $move = move_uploaded_file($file_loc, $folder.'/'.$new_name);
+            echo $file_loc;
+            if ($move) {
+                # code...
+                echo"
+                <script>
+                alert('Updated successfull');
+                window.location.href='./index.php?link=home';
+
+                </script>
+                ";
+            }else{
+                echo"
+                <script>
+                alert('Update failed');
+                </script>
+                ";     
+            }
+        }
+
+    }
+    
+    // elseif (!empty($pass)) {
+    //     # code...
+   
+        
+    //     if ($rec3 >=1) {
+    //         # code...
+    //         if ($pass === $rpass) {
+    //             # code...
+    //             $sql = "UPDATE `users` pswd = '$encript' WHERE id='$id'";
+    //             $res = mysqli_query($con, $sql);
+    
+    //             if ($res) {
+    //                 # code...
+    //                 echo "
+    //                 <script>
+    //                 // alert('Password Updated successfully');
+    //                 window.location.href='./index.php?link=home';
+    //                 </script>
+    //                 ";
+    //             }
+    //         }else {
+    //             # code...
+    //             echo "
+    //             <script>
+    //             // alert('Two passwords does not match');
+    //             window.location.href='./index.php?link=home';
+    //             </script>
+    //             ";
+    //         }
+    //     }else{
+    //         echo "
+    //         <script>
+    //         alert('Old password not correct');
+    //         window.location.href='./index.php?link=manage';
+    //         </script>
+    //         ";
+    //     }
+
+
+    // }
+    else {
+        # code...
+        echo "ths";
+        echo "
+        <script>
+        alert('what else');
+        window.location.href='./index.php?link=manage';
+        </script>
+        ";
+    }
+
+    
+
 }
 ?>
 
